@@ -1,0 +1,115 @@
+Microsoft Windows [Version 10.0.26100.3476]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Java 23\jdk-23_windows-x64_bin\jdk-23.0.2\bin>jshell.exe
+|  Welcome to JShell -- Version 23.0.2
+|  For an introduction type: /help intro
+
+jshell> // Switch on Sealed Types
+
+jshell> sealed interface Shape permits Rectangle, Square, Circle {}
+|  created interface Shape, however, it cannot be referenced until class Rectangle, class Square, and class Circle are declared
+
+jshell> record Point(double x, double y) {}
+|  created record Point
+
+jshell> record Edge(double u, double v) {
+   ...>         public double scalar(Edge other) {
+   ...>                 return this.u*other.u + this.v*other.v;
+   ...>         }
+   ...>         public double norm() {
+   ...>                 return Math.sqrt(this.scalar(this));
+   ...>         }
+   ...> }
+|  created record Edge
+
+jshell> record Square(Point p, Edge e) implements Shape {}
+|  created record Square, however, it cannot be referenced until class Shape is declared
+
+jshell> record Rectangle(Point p, Edge e1, Edge e2) implements Shape {
+   ...>         public Rectangle {
+   ...>                 if (Math.abs(e1.scalar(e2)) > 1E-06)
+   ...>                     throw new IllegalArgumentException("Edges must be orthogonal");
+   ...>         }
+   ...> }
+|  created record Rectangle, however, it cannot be referenced until class Shape is declared
+
+jshell> record Circle(Point center, double radius) implements Shape {}
+|  created record Circle
+
+jshell> ToDoubleFunction<Shape> surface = shape ->
+   ...>         switch (shape) {
+   ...>                 case Rectangle r -> Math.sqrt(r.e1().norm()*r.e2().norm());
+   ...>                 case Square s    -> s.e().norm();
+   ...>                 case Circle c    -> Math.PI * c.radius() * c.radius();
+   ...>         };
+surface ==> $Lambda/0x0000021d0100b870@4fe3c938
+
+jshell> Function<Shape, String> toString = shape ->
+   ...>         switch (shape) {
+   ...>                 case Rectangle r -> "Rectangle -> %.2f".formatted(surface.applyAsDouble(r));
+   ...>                 case Square s    -> "Square    -> %.2f".formatted(surface.applyAsDouble(s));
+   ...>                 case Circle c    -> "Circle    -> %.2f".formatted(surface.applyAsDouble(c));
+   ...>         };
+toString ==> $Lambda/0x0000021d0100bc98@20398b7c
+
+jshell> Shape s0 = new Square(new Point(0d, 0d), new Edge(0d, 0d));
+s0 ==> Square[p=Point[x=0.0, y=0.0], e=Edge[u=0.0, v=0.0]]
+
+jshell> Shape s1 = new Square(new Point(0d, 1d), new Edge(1d, 0d));
+s1 ==> Square[p=Point[x=0.0, y=1.0], e=Edge[u=1.0, v=0.0]]
+
+jshell> Shape s2 = new Square(new Point(2d, 3d), new Edge(1d, 1d));
+s2 ==> Square[p=Point[x=2.0, y=3.0], e=Edge[u=1.0, v=1.0]]
+
+jshell> Shape s3 = new Square(new Point(5d, 0d), new Edge(1d, 2d));
+s3 ==> Square[p=Point[x=5.0, y=0.0], e=Edge[u=1.0, v=2.0]]
+
+jshell> Rectangle r0 = new Rectangle(new Point(0d, 0d), new Edge(0d, 0d), new Edge(0d, 0d));
+r0 ==> Rectangle[p=Point[x=0.0, y=0.0], e1=Edge[u=0.0, v=0.0], e2=Edge[u=0.0, v=0.0]]
+
+jshell> Rectangle r1 = new Rectangle(new Point(1d, 2d), new Edge(1d, 0d), new Edge(0d, 0d));
+r1 ==> Rectangle[p=Point[x=1.0, y=2.0], e1=Edge[u=1.0, v=0.0], e2=Edge[u=0.0, v=0.0]]
+
+jshell> Rectangle r2 = new Rectangle(new Point(4d, 1d), new Edge(0d, 0d), new Edge(1d, 0d));
+r2 ==> Rectangle[p=Point[x=4.0, y=1.0], e1=Edge[u=0.0, v=0.0], e2=Edge[u=1.0, v=0.0]]
+
+jshell> Rectangle r3 = new Rectangle(new Point(0d, 3d), new Edge(1d, 0d), new Edge(0d, 1d));
+r3 ==> Rectangle[p=Point[x=0.0, y=3.0], e1=Edge[u=1.0, v=0.0], e2=Edge[u=0.0, v=1.0]]
+
+jshell> Rectangle r4 = new Rectangle(new Point(2d, 3d), new Edge(1d, 1d), new Edge(1d, -1d));
+r4 ==> Rectangle[p=Point[x=2.0, y=3.0], e1=Edge[u=1.0, v=1.0], e2=Edge[u=1.0, v=-1.0]]
+
+jshell> Circle c1 = new Circle(new Point(0d, 0d), 1d);
+c1 ==> Circle[center=Point[x=0.0, y=0.0], radius=1.0]
+
+jshell> Circle c2 = new Circle(new Point(2d, 3d), 2d);
+c2 ==> Circle[center=Point[x=2.0, y=3.0], radius=2.0]
+
+jshell> var shapes = List.of(s0, s1, s2, s3, r0, r1, r2, r3, r4, c1, c2);
+shapes ==> [Square[p=Point[x=0.0, y=0.0], e=Edge[u=0.0, v=0. ... =2.0, y=3.0], radius=2.0]]
+
+jshell> shapes.stream()
+$21 ==> java.util.stream.ReferencePipeline$Head@5a8806ef
+
+jshell>         .map(toString)
+|  Error:
+|  illegal start of expression
+|          .map(toString)
+|          ^
+
+jshell> shapes.stream().map(toString).forEach(System.out::println);
+Square    -> 0.00
+Square    -> 1.00
+Square    -> 1.41
+Square    -> 2.24
+Rectangle -> 0.00
+Rectangle -> 0.00
+Rectangle -> 0.00
+Rectangle -> 1.00
+Rectangle -> 1.41
+Circle    -> 3.14
+Circle    -> 12.57
+
+
+jshell>
