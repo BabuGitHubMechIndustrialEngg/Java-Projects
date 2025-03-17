@@ -92,11 +92,6 @@ shapes ==> [Square[p=Point[x=0.0, y=0.0], e=Edge[u=0.0, v=0. ... =2.0, y=3.0], r
 jshell> shapes.stream()
 $21 ==> java.util.stream.ReferencePipeline$Head@5a8806ef
 
-jshell>         .map(toString)
-|  Error:
-|  illegal start of expression
-|          .map(toString)
-|          ^
 
 jshell> shapes.stream().map(toString).forEach(System.out::println);
 Square    -> 0.00
